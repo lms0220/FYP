@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "esnext",
+    "lib": ["ES2023", "DOM"],
+    "types": ["vite/client","node"],
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": [
+    "src/main.tsx",
+    "src/App.tsx",
+    "src/routes.tsx",
+    "src/api.ts",
+    "src/pages/**/*.tsx",
+    "src/components/Layout.tsx",
+    "src/components/Navigation.tsx",
+    "src/components/ChatBot.tsx",
+    "src/components/figma/**/*.tsx"
+  ],
+  "exclude": ["src/components/ui"]
+}
