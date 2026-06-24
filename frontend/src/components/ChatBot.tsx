@@ -60,7 +60,10 @@ export default function ChatBot() {
 
     if (lowerMessage.includes("phishing") || lowerMessage.includes("spot")) {
       return "Phishing signs include: suspicious sender addresses, urgent requests for personal info, grammar errors, unexpected attachments, and links to unfamiliar websites. Always verify before clicking!";
-    } else if (lowerMessage.includes("scam sms") || lowerMessage.includes("text")) {
+    } else if (
+      lowerMessage.includes("scam sms") ||
+      lowerMessage.includes("text")
+    ) {
       return "Scam SMS messages often contain urgent language, threats, fake prizes, or requests to click suspicious links. Never share personal info via text and verify the sender through official channels.";
     } else if (lowerMessage.includes("safe") || lowerMessage.includes("link")) {
       return "To check if a link is safe, use our URL analyzer above! I can help you identify suspicious domains, check reputation scores, and detect phishing patterns.";
@@ -139,7 +142,7 @@ export default function ChatBot() {
           {/* Quick Replies */}
           {messages.length <= 2 && (
             <div className="px-4 py-2 bg-gray-50 border-t border-gray-200">
-              <p className="text-xs text-gray-600 mb-2">Quick questions:</p>
+              <p className="text-xs text-black mb-2">Quick questions:</p>
               <div className="flex flex-wrap gap-2">
                 {quickReplies.map((reply, index) => (
                   <button

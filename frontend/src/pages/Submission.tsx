@@ -261,7 +261,7 @@ export default function Submission() {
                         <h4 className="font-semibold text-gray-900 group-hover:text-green-600">
                           {example.label}
                         </h4>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-black mt-1">
                           {example.description}
                         </p>
                       </div>
@@ -300,7 +300,7 @@ export default function Submission() {
                         <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
                           {example.label}
                         </h4>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-black mt-1">
                           {example.description}
                         </p>
                       </div>

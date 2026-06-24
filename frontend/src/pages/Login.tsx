@@ -85,7 +85,7 @@ export default function Login() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Scam Shield AI
           </h1>
-          <p className="text-gray-600 text-center">
+          <p className="text-black text-center">
             Protect yourself from phishing and scams
           </p>
         </div>
@@ -153,7 +153,7 @@ export default function Login() {
                 type="checkbox"
                 className="size-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
               />
-              <span className="ml-2 text-sm text-gray-600">Remember me</span>
+              <span className="ml-2 text-sm text-black">Remember me</span>
             </label>
             <a
               href="#"
@@ -172,7 +172,7 @@ export default function Login() {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-600">
+          <p className="text-black">
             Don't have an account?{" "}
             <Link
               to="/register"

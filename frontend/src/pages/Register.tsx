@@ -150,7 +150,7 @@ export default function Register() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Create Account
           </h1>
-          <p className="text-gray-600 text-center">
+          <p className="text-black text-center">
             Join Scam Shield AI to stay protected
           </p>
         </div>
@@ -273,7 +273,7 @@ export default function Register() {
               className="size-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mt-1"
               required
             />
-            <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
+            <label htmlFor="terms" className="ml-2 text-sm text-black">
               I agree to the{" "}
               <a href="#" className="text-indigo-600 hover:text-indigo-800">
                 Terms of Service
@@ -294,7 +294,7 @@ export default function Register() {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-600">
+          <p className="text-black">
             Already have an account?{" "}
             <Link
               to="/"

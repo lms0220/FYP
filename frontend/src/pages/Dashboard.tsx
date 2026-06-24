@@ -56,7 +56,7 @@ export default function Dashboard() {
 
   const [dashboardStats, setDashboardStats] = useState(initialStats);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
-  const [username, setUsername] = useState("John");
+  const [username, setUsername] = useState("User");
 
   useEffect(() => {
     const storedName = sessionStorage.getItem("scamShieldUsername");
@@ -217,7 +217,7 @@ export default function Dashboard() {
                       {item.classification === "SAFE" ? "Safe" : "Malicious"}
                     </span>
                   </div>
-                  <p className="text-gray-900 font-semibold truncate max-w-3xl">
+                  <p className="text-black font-semibold truncate max-w-3xl">
                     {item.content}
                   </p>
                 </div>

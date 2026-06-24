@@ -121,10 +121,10 @@ export default function History() {
           <div className="flex items-center">
             <HistoryIcon className="size-8 text-indigo-600 mr-3" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-black">
                 Analysis History
               </h1>
-              <p className="text-gray-600">
+              <p className="text-black">
                 View and manage your past submissions
               </p>
             </div>
@@ -179,7 +179,7 @@ export default function History() {
               className={`px-4 py-2 rounded-lg font-medium transition ${
                 filter === "all"
                   ? "bg-indigo-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 text-black hover:bg-gray-200"
               }`}
             >
               All
@@ -189,7 +189,7 @@ export default function History() {
               className={`flex items-center px-4 py-2 rounded-lg font-medium transition ${
                 filter === "malicious"
                   ? "bg-red-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 text-black hover:bg-gray-200"
               }`}
             >
               <AlertTriangle className="size-4 mr-2" />
@@ -200,7 +200,7 @@ export default function History() {
               className={`flex items-center px-4 py-2 rounded-lg font-medium transition ${
                 filter === "safe"
                   ? "bg-green-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 text-black hover:bg-gray-200"
               }`}
             >
               <CheckCircle className="size-4 mr-2" />

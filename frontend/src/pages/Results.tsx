@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Shield, AlertTriangle, CheckCircle, ArrowLeft, Download, Share2, Search } from "lucide-react";
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  ArrowLeft,
+  Download,
+  Share2,
+  Search,
+} from "lucide-react";
 import { type PredictionResult } from "../api";
 
 export default function Results() {
@@ -10,15 +18,22 @@ export default function Results() {
 
   const initialResult = location.state?.result as PredictionResult | undefined;
   const initialContent = location.state?.content as string | undefined;
-  const [savedResult, setSavedResult] = useState<PredictionResult | undefined>(initialResult);
-  const [savedContent, setSavedContent] = useState<string | undefined>(initialContent);
+  const [savedResult, setSavedResult] = useState<PredictionResult | undefined>(
+    initialResult,
+  );
+  const [savedContent, setSavedContent] = useState<string | undefined>(
+    initialContent,
+  );
 
   useEffect(() => {
     if (!initialResult && id) {
       const saved = sessionStorage.getItem(`scamShieldResult-${id}`);
       if (saved) {
         try {
-          const parsed = JSON.parse(saved) as { result: PredictionResult; content: string };
+          const parsed = JSON.parse(saved) as {
+            result: PredictionResult;
+            content: string;
+          };
           setSavedResult(parsed.result);
           setSavedContent(parsed.content);
         } catch {
@@ -34,7 +49,9 @@ export default function Results() {
   if (!result) {
     return (
       <div className="max-w-5xl mx-auto text-center py-12">
-        <p className="text-gray-600 mb-4">No analysis result found for this report.</p>
+        <p className="text-black mb-4">
+          No analysis result found for this report.
+        </p>
         {id && <p className="text-sm text-gray-500 mb-4">Report ID: {id}</p>}
         <button
           onClick={() => navigate("/app/submit")}
@@ -88,7 +105,7 @@ ${
 
   const handleShareResults = () => {
     const shareText = `Scam & Phishing Detection Report\n${result.prediction}\nConfidence: ${result.score}%\nType: ${result.type}`;
-    
+
     if (navigator.share) {
       navigator.share({
         title: "Scam & Phishing Detection Report",
@@ -140,7 +157,9 @@ ${
       <div className="bg-white rounded-xl shadow p-8">
         <h2 className="text-2xl font-bold mb-6">Confidence Score</h2>
         <div className="flex items-center gap-8">
-          <div className="text-6xl font-bold text-indigo-600">{result.score}%</div>
+          <div className="text-6xl font-bold text-indigo-600">
+            {result.score}%
+          </div>
           <div className="flex-1">
             <div className="bg-gray-200 rounded-full h-6 overflow-hidden">
               <div
@@ -148,7 +167,7 @@ ${
                 style={{ width: `${result.score}%` }}
               />
             </div>
-            <p className="text-sm text-gray-600 mt-3">
+            <p className="text-sm text-black mt-3">
               {result.prediction === "SAFE"
                 ? "Content is verified as safe"
                 : "Content flagged as malicious"}
@@ -163,31 +182,43 @@ ${
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-gray-600 text-sm font-semibold">Content Type</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">{result.type.toUpperCase()}</p>
+              <p className="text-black text-sm font-semibold">Content Type</p>
+              <p className="text-2xl font-bold text-gray-900 mt-2">
+                {result.type.toUpperCase()}
+              </p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-gray-600 text-sm font-semibold">Risk Level</p>
-              <p className={`text-2xl font-bold mt-2 ${result.prediction === "SAFE" ? "text-green-600" : "text-red-600"}`}>
+              <p className="text-black text-sm font-semibold">Risk Level</p>
+              <p
+                className={`text-2xl font-bold mt-2 ${result.prediction === "SAFE" ? "text-green-600" : "text-red-600"}`}
+              >
                 {result.prediction === "SAFE" ? "Low" : "High"}
               </p>
             </div>
           </div>
-          
+
           <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Full Submitted Content</p>
-            <p className="text-sm bg-white p-4 rounded border border-gray-200 font-mono break-all">{submittedContent}</p>
+            <p className="text-black text-sm font-semibold mb-2">
+              Full Submitted Content
+            </p>
+            <p className="text-sm bg-white p-4 rounded border border-gray-200 font-mono break-all">
+              {submittedContent}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <p className="text-gray-600 text-sm font-semibold">Analysis Time</p>
-              <p className="text-sm text-gray-900 mt-2">{new Date().toLocaleString()}</p>
+              <p className="text-black text-sm font-semibold">Analysis Time</p>
+              <p className="text-sm text-gray-900 mt-2">
+                {new Date().toLocaleString()}
+              </p>
             </div>
             <div>
-              <p className="text-gray-600 text-sm font-semibold">Category</p>
+              <p className="text-black text-sm font-semibold">Category</p>
               <p className="text-sm text-gray-900 mt-2">
-                {result.prediction === "SAFE" ? "Legitimate Content" : "Phishing/Malicious"}
+                {result.prediction === "SAFE"
+                  ? "Legitimate Content"
+                  : "Phishing/Malicious"}
               </p>
             </div>
           </div>
@@ -195,7 +226,9 @@ ${
       </div>
 
       {/* Threat Indicators or Safety Indicators */}
-      {result.flags && result.flags.length > 0 && result.prediction !== "SAFE" ? (
+      {result.flags &&
+      result.flags.length > 0 &&
+      result.prediction !== "SAFE" ? (
         <div className="bg-white rounded-xl shadow p-8">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <AlertTriangle className="text-red-600" size={28} />
@@ -203,9 +236,17 @@ ${
           </h2>
           <div className="space-y-3">
             {result.flags.map((flag: string) => (
-              <div key={flag} className="flex items-start gap-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                <AlertTriangle className="text-red-600 flex-shrink-0 mt-0.5" size={24} />
-                <span className="text-red-700 font-semibold">{riskMessages[flag] || flag}</span>
+              <div
+                key={flag}
+                className="flex items-start gap-4 p-4 bg-red-50 rounded-lg border border-red-200"
+              >
+                <AlertTriangle
+                  className="text-red-600 flex-shrink-0 mt-0.5"
+                  size={24}
+                />
+                <span className="text-red-700 font-semibold">
+                  {riskMessages[flag] || flag}
+                </span>
               </div>
             ))}
           </div>
@@ -217,8 +258,12 @@ ${
             Safety Indicators
           </h2>
           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-            <p className="text-green-700 font-semibold">✓ No threats detected</p>
-            <p className="text-green-600 text-sm mt-2">This content passed all security checks</p>
+            <p className="text-green-700 font-semibold">
+              ✓ No threats detected
+            </p>
+            <p className="text-green-600 text-sm mt-2">
+              This content passed all security checks
+            </p>
           </div>
         </div>
       )}
@@ -227,16 +272,22 @@ ${
       <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-8">
         <div className="flex items-center gap-3 mb-6">
           <Shield className="text-amber-600" size={32} />
-          <h2 className="text-2xl font-bold text-amber-900">Recommended Actions</h2>
+          <h2 className="text-2xl font-bold text-amber-900">
+            Recommended Actions
+          </h2>
         </div>
 
         {result.prediction === "SAFE" ? (
-          <p className="text-amber-900 text-lg">No significant threat detected. Continue normal usage.</p>
+          <p className="text-amber-900 text-lg">
+            No significant threat detected. Continue normal usage.
+          </p>
         ) : (
           <ul className="space-y-3 text-amber-900">
             <li className="flex items-start gap-3">
               <span className="font-bold text-xl">•</span>
-              <span className="text-base">Do not click any links or provide personal information</span>
+              <span className="text-base">
+                Do not click any links or provide personal information
+              </span>
             </li>
             <li className="flex items-start gap-3">
               <span className="font-bold text-xl">•</span>
@@ -244,7 +295,9 @@ ${
             </li>
             <li className="flex items-start gap-3">
               <span className="font-bold text-xl">•</span>
-              <span className="text-base">Report to your email provider or mobile carrier</span>
+              <span className="text-base">
+                Report to your email provider or mobile carrier
+              </span>
             </li>
             <li className="flex items-start gap-3">
               <span className="font-bold text-xl">•</span>
@@ -252,7 +305,9 @@ ${
             </li>
             <li className="flex items-start gap-3">
               <span className="font-bold text-xl">•</span>
-              <span className="text-base">Monitor your accounts for suspicious activity</span>
+              <span className="text-base">
+                Monitor your accounts for suspicious activity
+              </span>
             </li>
           </ul>
         )}
