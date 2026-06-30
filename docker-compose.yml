@@ -9,7 +9,9 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_ROOT_HOST: "%"
     ports:
-      - "3306:3306"
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
       interval: 5s
@@ -24,3 +26,15 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: scam-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
