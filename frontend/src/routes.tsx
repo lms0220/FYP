@@ -6,6 +6,7 @@ import Submission from "./pages/Submission";
 import Results from "./pages/Results";
 import History from "./pages/History";
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
@@ -18,7 +19,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/app",
-    element: <Layout />,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,

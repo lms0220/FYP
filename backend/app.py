@@ -90,6 +90,56 @@ def history():
         for result, submission in rows
     ])
 
+@app.route("/history/delete", methods=["POST"])
+def delete_history():
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return jsonify({
+            "message": "Please login first"
+        }), 401
+
+
+    data = request.get_json()
+
+    result_ids = data.get("result_ids", [])
+
+
+    if not result_ids:
+        return jsonify({
+            "message": "No records selected"
+        }), 400
+
+
+    for result_id in result_ids:
+
+        result = AnalysisResult.query.filter_by(
+            result_id=result_id
+        ).first()
+
+
+        if result:
+
+            submission = Submission.query.filter_by(
+                submission_id=result.submission_id,
+                user_id=user_id
+            ).first()
+
+
+            if submission:
+
+                db.session.delete(result)
+                db.session.delete(submission)
+
+
+    db.session.commit()
+
+
+    return jsonify({
+        "message": "Deleted successfully"
+    })
+
 @app.route("/")
 def home():
 

@@ -15,7 +15,9 @@ export default function Navigation() {
       console.error(error);
     }
 
-    navigate("/");
+    sessionStorage.clear();
+
+    navigate("/", { replace: true });
   };
 
   const navItems = [

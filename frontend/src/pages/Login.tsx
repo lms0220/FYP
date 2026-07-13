@@ -50,6 +50,7 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
+        sessionStorage.setItem("isLoggedIn", "true");
         sessionStorage.setItem("scamShieldUsername", data.username || "");
         alert("Login Success");
 

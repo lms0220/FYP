@@ -10,6 +10,7 @@ import {
   Search,
 } from "lucide-react";
 import { type PredictionResult } from "../api";
+import jsPDF from "jspdf";
 
 export default function Results() {
   const location = useLocation();
@@ -71,37 +72,64 @@ export default function Results() {
     ip_url: "URL uses an IP address instead of a trusted domain",
   };
 
-  const handleDownloadReport = () => {
-    const report = `
-SCAM & PHISHING DETECTION REPORT
-================================
-Generated: ${new Date().toLocaleString()}
+const handleDownloadReport = () => {
+  const doc = new jsPDF();
 
-ANALYSIS RESULT: ${result.prediction}
-Confidence Score: ${result.score}%
-Input Type: ${result.type}
+  doc.setFontSize(18);
+  doc.text("Scam Shield AI Analysis Report", 20, 20);
 
-SUBMITTED CONTENT:
-${submittedContent}
+  doc.setFontSize(12);
 
-RISK FACTORS:
-${result.flags?.map((flag) => `- ${riskMessages[flag] || flag}`).join("\n") || "None detected"}
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 35);
 
-RECOMMENDED ACTIONS:
-${
-  result.prediction === "SAFE"
-    ? "- No significant threat detected. Continue normal usage."
-    : "- Do not click suspicious links\n- Avoid sharing personal information\n- Verify information through official sources\n- Report suspicious messages"
-}
-    `;
+  doc.text(`Prediction: ${result.prediction}`, 20, 50);
 
-    const blob = new Blob([report], { type: "text/plain" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `analysis-report-${Date.now()}.txt`;
-    a.click();
-  };
+  doc.text(`Confidence: ${result.score}%`, 20, 60);
+
+  doc.text(`Type: ${result.type}`, 20, 70);
+
+  doc.text("Submitted Content:", 20, 90);
+
+  doc.text(
+    doc.splitTextToSize(submittedContent || "", 170),
+    20,
+    100
+  );
+
+  let y = 140;
+
+  doc.text("Threat Indicators:", 20, y);
+
+  y += 10;
+
+  if (result.flags?.length) {
+    result.flags.forEach((flag) => {
+      doc.text("- " + (riskMessages[flag] || flag), 25, y);
+      y += 10;
+    });
+  } else {
+    doc.text("No threats detected.", 25, y);
+    y += 10;
+  }
+
+  y += 10;
+
+  doc.text("Recommended Actions:", 20, y);
+
+  y += 10;
+
+  if (result.prediction === "SAFE") {
+    doc.text("Continue normal usage.", 25, y);
+  } else {
+    doc.text("Do not click suspicious links.", 25, y);
+    y += 10;
+    doc.text("Avoid sharing personal information.", 25, y);
+    y += 10;
+    doc.text("Delete the message immediately.", 25, y);
+  }
+
+  doc.save(`Analysis_Report_${Date.now()}.pdf`);
+};
 
   const handleShareResults = () => {
     const shareText = `Scam & Phishing Detection Report\n${result.prediction}\nConfidence: ${result.score}%\nType: ${result.type}`;

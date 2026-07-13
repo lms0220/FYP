@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   History as HistoryIcon,
   AlertTriangle,
@@ -7,11 +8,12 @@ import {
   Download,
   Trash2,
 } from "lucide-react";
-import { getHistory, type HistoryItem } from "../api";
+import { getHistory, deleteHistory, type HistoryItem } from "../api";
 
 type FilterType = "all" | "malicious" | "safe";
 
 export default function History() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -57,8 +59,46 @@ export default function History() {
     }
   };
 
-  const deleteSelected = () => {
-    setSelectedItems([]);
+  const deleteSelected = async () => {
+
+    if(selectedItems.length === 0){
+      return;
+    }
+
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete selected records?"
+    );
+
+
+    if(!confirmDelete){
+      return;
+    }
+
+
+    try{
+
+      await deleteHistory(selectedItems);
+
+
+      setHistory((prev)=>
+        prev.filter(
+          item=>!selectedItems.includes(item.result_id)
+        )
+      );
+
+
+      setSelectedItems([]);
+
+
+    }catch(error){
+
+      console.error(error);
+
+      alert("Delete failed");
+
+    }
+
   };
 
   const exportAsCSV = () => {
@@ -265,12 +305,29 @@ export default function History() {
               {filteredHistory.map((item) => (
                 <tr
                   key={item.result_id}
-                  className="hover:bg-gray-50 transition"
+                  onClick={() =>
+                    navigate(`/app/results/${item.result_id}`, {
+                      state: {
+                        result: {
+                          type: item.type,
+                          prediction: item.classification,
+                          score: item.confidence_score,
+                          flags:
+                            item.classification === "SAFE"
+                              ? []
+                              : ["suspicious_keywords"],
+                        },
+                        content: item.content,
+                      },
+                    })
+                  }
+                  className="hover:bg-gray-50 transition cursor-pointer"
                 >
                   <td className="px-6 py-4">
                     <input
                       type="checkbox"
                       checked={selectedItems.includes(item.result_id)}
+                      onClick={(e) => e.stopPropagation()}
                       onChange={() => toggleSelectItem(item.result_id)}
                       className="size-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                     />

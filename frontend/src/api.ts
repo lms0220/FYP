@@ -56,6 +56,35 @@ export function getHistory() {
   return apiRequest<HistoryItem[]>("/api/history");
 }
 
-export function logout() {
-  return apiRequest<{ message: string }>("/logout");
+export async function logout() {
+  return fetch("http://localhost:5000/logout", {
+    method: "GET",
+    credentials: "include",
+  });
+}
+
+export async function deleteHistory(result_ids:string[]) {
+
+  const response = await fetch(
+    "http://localhost:5000/history/delete",
+    {
+      method:"POST",
+      credentials:"include",
+      headers:{
+        "Content-Type":"application/json",
+      },
+      body:JSON.stringify({
+        result_ids
+      })
+    }
+  );
+
+
+  if(!response.ok){
+    throw new Error("Delete failed");
+  }
+
+
+  return response.json();
+
 }
