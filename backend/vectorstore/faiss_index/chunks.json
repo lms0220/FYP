@@ -1,0 +1,117 @@
+[
+  {
+    "source": "knowledge_base/phishing/fake_login_page.md",
+    "content": "# Fake Login Page\n\n## Description\nFake login pages imitate legitimate services to steal usernames, passwords, and banking information.\n\n## Indicators\n- Strange domain names\n- Incorrect website design\n- Requests sensitive information\n\n## Prevention\n- Access websites through official apps\n- Verify URL before login",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/phishing/phishing_url.md",
+    "content": "# Phishing URL Knowledge\n\n## Description\nPhishing URLs are malicious links designed to imitate legitimate websites to steal user information.\n\n## Common Characteristics\n- Fake login pages\n- Suspicious domains\n- Shortened URLs\n- Random characters\n\n## Indicators\n- Unknown domain\n- Misspelled brand names\n- Urgent messages containing links\n\n## Prevention\n- Check website domain\n- Avoid clicking unknown links",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/prevention/general_prevention.md",
+    "content": "# General Scam Prevention\n\n## Safety Rules\n\n- Never share OTP or passwords\n- Do not click suspicious links\n- Verify information through official channels\n- Enable multi-factor authentication\n- Report suspicious activities",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/scam_types/bank_scam.md",
+    "content": "# Scam Type: Bank Scam\n\n## Category\n\nFinancial Scam\n\n\n## Description\n\nBank scam is a type of fraud where attackers pretend to be bank representatives or financial institutions to steal users' personal information, banking credentials, or money.\n\nScammers commonly use SMS messages, phone calls, fake websites, or phishing links to deceive victims.\n\n\n## Common Attack Methods",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/scam_types/bank_scam.md",
+    "content": "## Common Attack Methods\n\n- Fake bank SMS messages\n- Fake customer service calls\n- Phishing websites\n- Fake mobile banking applications\n- Requests for OTP or account verification\n\n\n## Common Keywords\n\n- OTP\n- Verify account\n- Account suspended\n- Security update\n- Login\n- Transaction\n- Suspicious activity\n- Click here\n- Urgent action required\n\n\n## Common Indicators\n\nThe message may contain:",
+    "chunk_number": "1"
+  },
+  {
+    "source": "knowledge_base/scam_types/bank_scam.md",
+    "content": "## Common Indicators\n\nThe message may contain:\n\n- Urgent requests requiring immediate action\n- Threats of account suspension or blocking\n- Suspicious URLs\n- Requests for confidential information\n- Requests for OTP, password, or banking details\n\n\n## Example Scam Message\n\nExample:\n\n\"Your bank account has been suspended due to suspicious activity. Please verify your account immediately by clicking the link below.\"\n\n\n## Why This Is Dangerous",
+    "chunk_number": "2"
+  },
+  {
+    "source": "knowledge_base/scam_types/bank_scam.md",
+    "content": "## Why This Is Dangerous\n\nAttackers use fake messages and websites to collect users' login credentials, personal information, or financial details.\n\nVictims may lose money or have their bank accounts compromised.\n\n\n## Prevention\n\n- Never share OTP or password with anyone.\n- Do not click unknown links received through SMS.\n- Verify information through official banking applications.\n- Contact the bank using official channels.\n\n\n## Related Scam Types",
+    "chunk_number": "3"
+  },
+  {
+    "source": "knowledge_base/scam_types/bank_scam.md",
+    "content": "## Related Scam Types\n\n- Phishing Scam\n- Identity Theft\n- Fake Website Scam\n\n\n## Source Information\n\nSource Type:\nOfficial cybersecurity awareness materials\n\nCollected Date:\n2026-08-05",
+    "chunk_number": "4"
+  },
+  {
+    "source": "knowledge_base/scam_types/investment_scam.md",
+    "content": "# Scam Type: Investment Scam\n\n## Category\nFinancial Scam\n\n## Description\nInvestment scam is a fraud where criminals attract victims by offering fake investment opportunities, unrealistic profits, or guaranteed returns.\n\n## Common Attack Methods\n- Fake investment platforms\n- Cryptocurrency scams\n- Social media investment groups\n- Fake financial advisors\n\n## Common Keywords\n- Guaranteed profit\n- High return\n- Risk-free investment\n- Limited opportunity\n- Earn money quickly\n- Crypto investment",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/scam_types/investment_scam.md",
+    "content": "## Common Indicators\n- Promises unrealistic returns\n- Pressure to invest immediately\n- Unknown investment companies\n- Fake testimonials\n\n## Prevention\n- Verify investment companies\n- Avoid guaranteed profit promises\n- Do research before investing\n- Do not transfer money to unknown platforms",
+    "chunk_number": "1"
+  },
+  {
+    "source": "knowledge_base/scam_types/job_scam.md",
+    "content": "# Scam Type: Job Scam\n\n## Category\nEmployment Scam\n\n## Description\nJob scams involve criminals creating fake job opportunities to steal personal information or money from job seekers.\n\n## Common Attack Methods\n- Fake recruitment messages\n- Fake interview offers\n- Requests for registration fees\n- Fake work-from-home jobs\n\n## Common Keywords\n- Easy money\n- Work from home\n- High salary\n- No experience required\n- Registration fee",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/scam_types/job_scam.md",
+    "content": "## Common Indicators\n- Unrealistic salary\n- No proper interview process\n- Requests for payment\n- Unknown company information\n\n## Prevention\n- Verify company information\n- Do not pay recruitment fees\n- Check official job platforms",
+    "chunk_number": "1"
+  },
+  {
+    "source": "knowledge_base/scam_types/loan_scam.md",
+    "content": "# Scam Type: Loan Scam\n\n## Category\nFinancial Scam\n\n## Description\nLoan scams trick victims by offering fake loans and requesting upfront payments or personal information.\n\n## Common Keywords\n- Fast approval\n- Low interest\n- Instant loan\n- No documents required\n\n## Common Indicators\n- Requires upfront payment\n- Requests personal information\n- Unverified lenders\n\n## Prevention\n- Verify financial institutions\n- Avoid paying processing fees to unknown parties",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/scam_types/otp_scam.md",
+    "content": "# Scam Type: OTP Scam\n\n## Category\nAuthentication Scam\n\n## Description\nOTP scams attempt to steal one-time passwords to access victims' accounts.\n\n## Common Keywords\n- OTP\n- Verification code\n- Security code\n- Login verification\n\n## Common Indicators\n- Requests OTP sharing\n- Fake bank representatives\n- Urgent account verification\n\n## Prevention\n- Never share OTP\n- Banks will not request OTP",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/scam_types/parcel_scam.md",
+    "content": "# Scam Type: Parcel Scam\n\n## Category\n\nDelivery Scam\n\n\n## Description\n\nParcel scam is a type of fraud where scammers pretend to be delivery companies or courier services.\n\nThey usually send fake SMS messages claiming that a parcel cannot be delivered due to unpaid fees, incomplete information, or delivery issues.\n\n\n## Common Attack Methods\n\n- Fake courier SMS messages\n- Fake delivery websites\n- Requests for small payment fees\n- Fake tracking links\n- Collection of personal information",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/scam_types/parcel_scam.md",
+    "content": "## Common Keywords\n\n- Parcel\n- Delivery\n- Tracking\n- Failed delivery\n- Delivery fee\n- Pay now\n- Update address\n- Confirm details\n- Courier\n\n\n## Common Indicators\n\nThe message may contain:\n\n- Unexpected parcel notifications\n- Requests for small payments\n- Suspicious tracking URLs\n- Urgent deadlines\n- Unknown sender\n\n\n## Example Scam Message\n\nExample:\n\n\"Your parcel delivery failed. Please pay RM2 delivery fee and update your address through the following link.\"\n\n\n## Why This Is Dangerous",
+    "chunk_number": "1"
+  },
+  {
+    "source": "knowledge_base/scam_types/parcel_scam.md",
+    "content": "## Why This Is Dangerous\n\nAttackers create fake delivery websites to collect:\n\n- Credit card information\n- Personal details\n- Banking information\n\nVictims may also install malicious applications from fake links.\n\n\n## Prevention\n\n- Do not click unknown delivery links.\n- Check delivery information through official courier applications.\n- Do not provide payment information to unknown websites.\n- Verify the sender before taking action.\n\n\n## Related Scam Types",
+    "chunk_number": "2"
+  },
+  {
+    "source": "knowledge_base/scam_types/parcel_scam.md",
+    "content": "## Related Scam Types\n\n- Phishing Scam\n- Fake Website Scam\n- Payment Scam\n\n\n## Source Information\n\nSource Type:\nCybersecurity awareness materials\n\nCollected Date:\n2026-08-05",
+    "chunk_number": "3"
+  },
+  {
+    "source": "knowledge_base/scam_types/qr_scam.md",
+    "content": "# Scam Type: QR Scam\n\n## Category\nPayment Scam\n\n## Description\nQR scams use fake QR codes to redirect victims to malicious websites or payment requests.\n\n## Common Keywords\n- Scan QR\n- Payment\n- Discount\n- Reward\n\n## Common Indicators\n- Unknown QR codes\n- Suspicious payment requests\n\n## Prevention\n- Verify QR source\n- Do not scan unknown QR codes",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/scam_types/romance_scam.md",
+    "content": "# Scam Type: Romance Scam\n\n## Category\nSocial Engineering Scam\n\n## Description\nRomance scams involve criminals building fake relationships with victims to gain trust and request money.\n\n## Common Attack Methods\n- Fake social media profiles\n- Long-distance relationship manipulation\n- Emergency money requests\n\n## Common Keywords\n- Love\n- Emergency\n- Need money\n- Help me\n- Investment opportunity\n\n## Common Indicators\n- Avoids video calls\n- Requests financial help\n- Creates emotional pressure",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/scam_types/romance_scam.md",
+    "content": "## Common Indicators\n- Avoids video calls\n- Requests financial help\n- Creates emotional pressure\n\n## Prevention\n- Do not send money to online strangers\n- Verify identity\n- Avoid sharing personal information",
+    "chunk_number": "1"
+  },
+  {
+    "source": "knowledge_base/sms_patterns/fake_bank_sms.md",
+    "content": "# Fake Bank SMS Pattern\n\n## Example\nYour account has been suspended. Click the link to verify.\n\n## Scam Indicators\n- Account suspension warning\n- Urgent action request\n- Suspicious URL\n\n## Prevention\n- Do not click the link\n- Contact bank officially",
+    "chunk_number": "0"
+  },
+  {
+    "source": "knowledge_base/sms_patterns/fake_delivery_sms.md",
+    "content": "# Fake Delivery SMS Pattern\n\n## Example\nYour parcel cannot be delivered. Pay RM2 delivery fee.\n\n## Indicators\n- Unexpected parcel notification\n- Payment request\n- Fake tracking link\n\n## Prevention\n- Verify courier information\n- Avoid unknown links",
+    "chunk_number": "0"
+  }
+]

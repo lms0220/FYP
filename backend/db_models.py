@@ -133,6 +133,21 @@ class AnalysisResult(db.Model):
         nullable=False
     )
 
+    llm_analysis = db.Column(
+        db.Text,
+        nullable=True
+    )
+
+    detected_threats = db.Column(
+        db.Text,
+        nullable=True
+    )
+
+    risk_level = db.Column(
+        db.String(20),
+        nullable=True
+    )
+
 
 
     created_at=db.Column(
@@ -153,6 +168,12 @@ class AnalysisResult(db.Model):
             "confidence_score": float(
                 self.confidence_score
             ),
+
+            "llm_analysis": self.llm_analysis,
+
+            "detected_threats": self.detected_threats,
+
+            "risk_level": self.risk_level,
 
             "created_at": self.created_at.isoformat()
 
