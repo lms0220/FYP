@@ -41,7 +41,7 @@ CORS(
 
 
 app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "mysql+pymysql://root:@mysql/scam_detection"
+    "mysql+pymysql://root:@localhost:3306/scam_detection"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 

@@ -1,2 +1,9 @@
+# RAG vector database
+backend/vectorstore/
+
+# Python cache
 __pycache__/
 *.pyc
+
+# Environment
+.env
