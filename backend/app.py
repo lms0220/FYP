@@ -1,10 +1,7 @@
+import os
+import secrets
 from flask import Flask, json, request, jsonify, session
 from flask_cors import CORS
-import pickle
-import re
-import os
-from urllib.parse import urlparse
-from difflib import SequenceMatcher
 
 from db_models import db, User, AnalysisResult, Submission
 from datetime import datetime
@@ -12,13 +9,18 @@ import uuid
 from werkzeug.security import check_password_hash, generate_password_hash
 from services.llm_service import analyze_url, generate_scam_explanation
 from services.rag_service import retrieve_context
+from services.zh_detection import analyze_chinese_sms, extract_link, is_chinese
 import time
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy import inspect, text as sql_text
 
 app = Flask(__name__)
 
-app.secret_key = "scamshield_secret_key_2026"
+# Never ship a known signing key: anyone who knows it can forge login sessions.
+# Without SECRET_KEY a random one is generated, so sessions reset on restart.
+app.secret_key = os.getenv("SECRET_KEY") or secrets.token_hex(32)
+if not os.getenv("SECRET_KEY"):
+    print("WARNING: SECRET_KEY is not set; using a random key (sessions reset on restart).")
 # Do not reuse Flask's default "session" cookie.  Older local deployments
 # can leave a cookie with that name under a different domain/path, causing the
 # browser to keep sending its stale user ID even after a successful login.
@@ -40,8 +42,8 @@ CORS(
 )
 
 
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "mysql+pymysql://root:@localhost:3306/scam_detection"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+    "DATABASE_URL", "mysql+pymysql://root:@localhost:3306/scam_detection"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -210,218 +212,13 @@ def home():
 
 
 
-# =========================
-# LOAD MODELS
-# =========================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "ml_models")
-
-sms_model = pickle.load(open(os.path.join(MODEL_DIR, "sms_model.pkl"), "rb"))
-sms_vectorizer = pickle.load(open(os.path.join(MODEL_DIR, "sms_vectorizer.pkl"), "rb"))
-
-url_model = pickle.load(open(os.path.join(MODEL_DIR, "url_ml_model.pkl"), "rb"))
-url_vectorizer = pickle.load(open(os.path.join(MODEL_DIR, "url_tfidf.pkl"), "rb"))
-# =========================
-# CONFIG
-# =========================
-TRUSTED_DOMAINS = {
-    "google.com", "facebook.com", "amazon.com",
-    "microsoft.com", "apple.com", "paypal.com"
-}
-
-SUSPICIOUS_TLDS = {".xyz", ".top", ".click", ".tk", ".ml", ".ga", ".cf", ".ru", ".gq", ".work", ".zip", ".country"}
-SHORTENERS = {"bit.ly", "tinyurl.com", "t.co"}
-SUSPICIOUS_KEYWORDS = {"login", "verify", "secure", "update", "account", "password", "signin", "wallet", "confirm"}
-URGENCY_KEYWORDS = {"urgent", "suspended", "immediately", "alert", "limited", "expire", "locked", "action required"}
-BRANDS = {"amazon", "apple", "microsoft", "google", "paypal", "facebook", "netflix", "bank"}
-
-# ===================================
-# INPUT TYPE DETECTION
-# ===================================
-
-def detect_input_type(text):
-
-    text = text.strip().lower()
-
-    url_pattern = (
-        r"https?://|"
-        r"www\.|"
-        r"\.com|"
-        r"\.net|"
-        r"\.org|"
-        r"\.xyz|"
-        r"\.top|"
-        r"\.click|"
-        r"\.io|"
-        r"\.co"
-    )
-
-    if re.search(url_pattern, text):
-        return "url"
-
-    return "sms"
-
-# =========================
-# HELPERS
-# =========================
-def extract_domain(url):
-    candidate = extract_url(url)
-    parsed = urlparse(candidate if candidate.startswith("http") else "http://" + candidate)
-    return parsed.netloc.lower().split(":")[0]
-
-
-def extract_url(text):
-    match = re.search(r"https?://[^\s]+|www\.[^\s]+", text, re.IGNORECASE)
-    return match.group(0).rstrip(".,!?)]") if match else text.strip()
-
-
-def add_factor(factors, code, title, detail, points):
-    factors.append({"code": code, "title": title, "detail": detail, "points": points})
-
-# =========================
-# RULE ENGINE
-# =========================
-def rule_engine(url):
-    text_lower = url.lower()
-    candidate = extract_url(url)
-    parsed = urlparse(candidate if candidate.startswith("http") else "http://" + candidate)
-    domain = parsed.netloc.lower().split(":")[0]
-    path = parsed.path.lower()
-    factors = []
-
-    if re.fullmatch(r"\d{1,3}(?:\.\d{1,3}){3}", domain):
-        add_factor(factors, "ip_url", "IP-address URL", "Uses an IP address instead of a registered domain.", 20)
-    if candidate.lower().startswith("http://"):
-        add_factor(factors, "no_https", "Unsecured HTTP connection", "The link uses HTTP rather than encrypted HTTPS.", 10)
-    if domain in SHORTENERS or any(domain.endswith("." + shortener) for shortener in SHORTENERS):
-        add_factor(factors, "url_shortener", "Shortened URL", "A URL shortener hides the final destination.", 12)
-
-    normalized_domain = domain.replace("0", "o").replace("1", "l").replace("3", "e").replace("@", "a")
-    for brand in BRANDS:
-        if domain in TRUSTED_DOMAINS:
-            continue
-        similarity = SequenceMatcher(None, normalized_domain.split(".")[0], brand).ratio()
-        if brand in normalized_domain or similarity >= 0.78:
-            add_factor(factors, "brand_impersonation", "Brand impersonation detected", f'The domain "{domain}" uses a lookalike spelling to imitate {brand.title()}, not its official domain.', 30)
-            break
-
-    keyword_hits = sorted({keyword for keyword in SUSPICIOUS_KEYWORDS if keyword in f"{domain} {path}"})
-    if keyword_hits:
-        add_factor(factors, "credential_request", "Credential-harvesting pattern", f"Login or verification terms detected: {', '.join(keyword_hits)}.", 20)
-    urgency_hits = sorted({keyword for keyword in URGENCY_KEYWORDS if keyword in text_lower})
-    if urgency_hits:
-        add_factor(factors, "social_engineering", "Social engineering", f"Urgency language attempts to pressure the user: {', '.join(urgency_hits)}.", 20)
-    if any(domain.endswith(tld) for tld in SUSPICIOUS_TLDS):
-        tld = next(tld for tld in SUSPICIOUS_TLDS if domain.endswith(tld))
-        phishing_context = any(factor["code"] in {"brand_impersonation", "credential_request"} for factor in factors)
-        detail = (
-            f"The foreign TLD ({tld}) is combined with brand impersonation or login behaviour, increasing phishing risk."
-            if phishing_context
-            else f"The {tld} TLD should be verified together with other URL signals; it is not malicious by itself."
-        )
-        add_factor(factors, "contextual_tld", "Contextual domain risk", detail, 5)
-    if len(candidate) > 90 or candidate.count(".") >= 4 or candidate.count("-") >= 3:
-        add_factor(factors, "suspicious_structure", "Suspicious URL structure", "The URL has an unusually complex structure.", 8)
-
-    return min(sum(factor["points"] for factor in factors), 100), factors
-
-# =========================
-# TRUST ENGINE
-# =========================
-def trust_engine(url):
-    domain = extract_domain(url)
-    return 25 if domain in TRUSTED_DOMAINS or any(domain.endswith("." + trusted) for trusted in TRUSTED_DOMAINS) else 0
-
-# =========================
-# ML ENGINE
-# =========================
-def ml_engine(url):
-    vec = url_vectorizer.transform([url])
-    prob = url_model.predict_proba(vec)[0]
-
-    classes = list(url_model.classes_)
-
-    if "phishing" in classes:
-        idx = classes.index("phishing")
-
-    elif "malicious" in classes:
-        idx = classes.index("malicious")
-
-    else:
-        idx = 1
-
-    return prob[idx] * 100
-
-# =========================
-# FUSION ENGINE
-# =========================
-def fusion_engine(url):
-    rule_score, factors = rule_engine(url)
-    trust_score = trust_engine(url)
-    ml_score = ml_engine(url)
-
-    # The ML probability is converted to a capped, visible contribution. This
-    # makes the final risk score exactly equal to the displayed factor total.
-    ml_points = min(10, max(0, round(ml_score / 10)))
-    if ml_points:
-        add_factor(
-            factors,
-            "ml_phishing_signal",
-            "ML phishing signal",
-            f"The URL model found phishing-like text and domain patterns ({ml_score:.1f}% raw model probability).",
-            ml_points,
-        )
-    if trust_score:
-        add_factor(
-            factors,
-            "trusted_domain_adjustment",
-            "Known-domain adjustment",
-            "The hostname matches a trusted-domain allowlist, reducing risk.",
-            -trust_score,
-        )
-
-    final_score = max(0, min(100, sum(factor["points"] for factor in factors)))
-
-    if final_score >= 50:
-        label = "MALICIOUS"
-    else:
-        label = "SAFE"
-
-    return {
-        "url": url,
-        "final_score": round(final_score, 2),
-        "label": label,
-        "rule_score": rule_score,
-        "ml_score": round(ml_score, 2),
-        "trust_score": trust_score,
-        "risk_level": "High" if final_score >= 70 else "Medium" if final_score >= 40 else "Low",
-        "flags": [factor["code"] for factor in factors if factor["points"] > 0],
-        "risk_factors": factors,
-        "score_breakdown": {
-            "ml_probability": round(ml_score, 2),
-            "ml_contribution": ml_points,
-            "rule_score": rule_score,
-            "trusted_domain_adjustment": -trust_score,
-            "final_risk_score": round(final_score, 2),
-        },
-    }
-
-
-def fallback_url_analysis(result):
-    """Keep URL explanations useful when the optional local LLM is offline."""
-    factors = result["risk_factors"]
-    details = " ".join(factor["detail"] for factor in factors)
-    brand_factor = next(
-        (factor for factor in factors if factor["code"] == "brand_impersonation"),
-        None,
-    )
-    return {
-        "explanation": details or "The URL was assessed using its domain, structure, and phishing indicators.",
-        "threat_type": "Brand impersonation phishing" if brand_factor else "Potential phishing URL",
-        "target_organization": "Amazon" if brand_factor and "Amazon" in brand_factor["detail"] else "Unknown",
-        "risk_level": result["risk_level"],
-        "recommendation": "Do not open the URL or enter credentials. Access the organization through its official website and report the phishing page.",
-    }
+from services.detection import (
+    sms_model,
+    sms_vectorizer,
+    detect_input_type,
+    fusion_engine,
+    fallback_url_analysis,
+)
 
 # =========================
 # API ROUTE
@@ -449,7 +246,10 @@ def predict():
 
 
 
-    input_type = detect_input_type(text)
+    # Chinese text goes through the Chinese rule-based analyser; the English
+    # SMS model and knowledge base cannot read it.
+    chinese = is_chinese(text)
+    input_type = "sms" if chinese else detect_input_type(text)
 
 
 
@@ -487,6 +287,22 @@ def predict():
     # ======================
     # SMS ANALYSIS
     # ======================
+
+    elif chinese:
+
+        link = extract_link(text)
+        zh = analyze_chinese_sms(text, fusion_engine(link) if link else None)
+
+        prediction = zh["prediction"]
+        score = zh["score"]
+        flags = zh["flags"]
+        risk_factors = zh["risk_factors"]
+        risk_level = zh["risk_level"]
+        llm_analysis = zh["llm_analysis"]
+        score_breakdown = {"rule_score": score, "final_risk_score": score}
+        rag_analysis = None
+
+        response_type = "sms"
 
     else:
 
@@ -649,6 +465,8 @@ def predict():
 
     "type": response_type,
 
+    "language": "zh" if chinese else "en",
+
     "prediction": prediction,
 
     "score": float(score),
@@ -807,5 +625,6 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=5000,
-        debug=True
+        # The Werkzeug debugger allows remote code execution; opt in locally only.
+        debug=os.getenv("FLASK_DEBUG", "false").lower() == "true"
     )

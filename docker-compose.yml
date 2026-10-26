@@ -29,6 +29,9 @@ services:
         condition: service_healthy
 
     environment:
+      # Set SECRET_KEY in a .env file next to this compose file (see .env.example).
+      SECRET_KEY: ${SECRET_KEY:-}
+      DATABASE_URL: mysql+pymysql://root:@mysql:3306/scam_detection
       # Ollama runs on the Windows host, outside Docker.
       OLLAMA_URL: http://host.docker.internal:11434/api/generate
       OLLAMA_MODEL: qwen3:8b
