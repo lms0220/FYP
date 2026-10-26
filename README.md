@@ -218,74 +218,69 @@ FYP
 
 # Installation
 
+## Prerequisites
+
+* Docker and Docker Compose
+* [Ollama](https://ollama.com) running on the host machine with the Qwen model pulled (the backend container reaches it via `host.docker.internal:11434`):
+
+```bash
+ollama pull qwen3:8b
+```
+
 ## 1. Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/lms0220/FYP.git
 
 cd FYP
 ```
 
 ---
 
-# Backend Setup
+# Quick Start (Docker)
 
-Navigate to backend:
+```bash
+docker compose up --build
+```
+
+| Service  | URL                     |
+| -------- | ----------------------- |
+| Frontend | http://localhost:5173   |
+| Backend  | http://localhost:5000   |
+| MySQL    | localhost:3307 (root, no password, DB `scam_detection`) |
+
+The MySQL credentials above are for local development only.
+
+LLM settings are controlled by environment variables in `docker-compose.yml`:
+
+| Variable                | Default / compose value                           | Purpose                          |
+| ----------------------- | ------------------------------------------------- | -------------------------------- |
+| `OLLAMA_URL`            | `http://host.docker.internal:11434/api/generate`  | Ollama endpoint                  |
+| `OLLAMA_MODEL`          | `qwen3:8b`                                        | Model used for explanations      |
+| `OLLAMA_ENABLED`        | `true`                                            | Set `false` to skip LLM analysis |
+| `OLLAMA_CONNECT_TIMEOUT`| `5` (compose)                                     | Connect timeout (seconds)        |
+| `OLLAMA_READ_TIMEOUT`   | `60` (compose)                                    | Read timeout (seconds)           |
+
+---
+
+# Manual Setup (without Docker)
+
+Backend:
 
 ```bash
 cd backend
-```
-
-Install dependencies:
-
-```bash
 pip install -r requirements.txt
+python create_vector_db.py   # build FAISS index from knowledge_base/
+python test_rag.py           # optional: verify the RAG pipeline
+python app.py                # http://localhost:5000
 ```
 
----
-
-# Build RAG Vector Database
-
-Generate FAISS vector index from the knowledge base:
+Frontend:
 
 ```bash
-python create_vector_db.py
-```
-
----
-
-# Test RAG Pipeline
-
-Run:
-
-```bash
-python test_rag.py
-```
-
-Expected output:
-
-```
-Retrieved context:
-- bank_scam.md
-- fake_bank_sms.md
-
-LLM explanation generated successfully
-```
-
----
-
-# Run Backend
-
-Start Flask server:
-
-```bash
-python app.py
-```
-
-Backend runs on:
-
-```
-http://localhost:5000
+cd frontend
+npm install
+npm run dev
 ```
 
 ---
@@ -326,6 +321,20 @@ Response:
     }
 }
 ```
+
+---
+
+## Other Endpoints
+
+| Method | Path                | Purpose                      |
+| ------ | ------------------- | ---------------------------- |
+| POST   | `/register`         | Create an account            |
+| POST   | `/login`            | Log in                       |
+| GET    | `/logout`           | Log out                      |
+| GET    | `/me`               | Current user                 |
+| GET    | `/api/history`      | Scan history                 |
+| POST   | `/history/delete`   | Delete history entries       |
+| GET    | `/api/dashboard`    | Dashboard statistics         |
 
 ---
 
