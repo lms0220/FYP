@@ -1,3 +1,5 @@
+import os
+import secrets
 from flask import Flask, json, request, jsonify, session
 from flask_cors import CORS
 import pickle
@@ -18,7 +20,11 @@ from sqlalchemy import inspect, text as sql_text
 
 app = Flask(__name__)
 
-app.secret_key = "scamshield_secret_key_2026"
+# Never ship a known signing key: anyone who knows it can forge login sessions.
+# Without SECRET_KEY a random one is generated, so sessions reset on restart.
+app.secret_key = os.getenv("SECRET_KEY") or secrets.token_hex(32)
+if not os.getenv("SECRET_KEY"):
+    print("WARNING: SECRET_KEY is not set; using a random key (sessions reset on restart).")
 # Do not reuse Flask's default "session" cookie.  Older local deployments
 # can leave a cookie with that name under a different domain/path, causing the
 # browser to keep sending its stale user ID even after a successful login.
@@ -40,8 +46,8 @@ CORS(
 )
 
 
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "mysql+pymysql://root:@localhost:3306/scam_detection"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+    "DATABASE_URL", "mysql+pymysql://root:@localhost:3306/scam_detection"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -807,5 +813,6 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=5000,
-        debug=True
+        # The Werkzeug debugger allows remote code execution; opt in locally only.
+        debug=os.getenv("FLASK_DEBUG", "false").lower() == "true"
     )
