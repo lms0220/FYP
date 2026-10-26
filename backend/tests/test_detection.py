@@ -81,3 +81,29 @@ def test_sms_model_separates_clear_spam_from_ham():
     preds = sms_model.predict(sms_vectorizer.transform([spam, ham]))
     assert str(preds[0]).lower() in {"spam", "1", "malicious"}
     assert str(preds[1]).lower() in {"ham", "0", "safe"}
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://github.com",
+        "https://www.bbc.co.uk/news/world",
+        "https://en.wikipedia.org/wiki/Python",
+        "https://docs.github.com/en/actions",
+        "https://www.microsoft.com/en-us",
+    ],
+)
+def test_well_known_sites_are_not_flagged(url):
+    assert fusion_engine(url)["label"] == "SAFE"
+
+
+def test_top_domain_allowlist_matches_exact_domain_only():
+    from services.detection import is_top_domain
+
+    assert is_top_domain("google.com") and is_top_domain("www.google.com")
+    assert not is_top_domain("google.com.evil.xyz")
+    assert not is_top_domain("sites.google.com")
+
+
+def test_phishing_with_path_stays_malicious():
+    assert fusion_engine("http://secure-bank-verify.top/login.php")["label"] == "MALICIOUS"

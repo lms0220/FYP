@@ -30,6 +30,28 @@ SUSPICIOUS_TLDS = {".xyz", ".top", ".click", ".tk", ".ml", ".ga", ".cf", ".ru", 
 SHORTENERS = {"bit.ly", "tinyurl.com", "t.co"}
 SUSPICIOUS_KEYWORDS = {"login", "verify", "secure", "update", "account", "password", "signin", "wallet", "confirm"}
 URGENCY_KEYWORDS = {"urgent", "suspended", "immediately", "alert", "limited", "expire", "locked", "action required"}
+# The URL model reaches ~0.9 F1 on its own, so it must be able to move the score;
+# well-known sites are protected by the top-domain allowlist below instead.
+ML_MAX_POINTS = 50
+ML_POINTS_PER_PERCENT = 0.5
+TOP_DOMAIN_TRUST = 50
+BARE_HOST_ML_MAX_POINTS = 10
+
+
+def _load_top_domains():
+    path = os.path.join(BASE_DIR, "data", "top_domains.txt")
+    try:
+        with open(path, encoding="utf-8") as handle:
+            return {line.strip() for line in handle if line.strip()}
+    except OSError:
+        return set()
+
+
+# Tranco top ~10k registrable domains (shorteners and shared hosts removed).
+# Matched exactly (optionally with www.) because subdomains of big sites can
+# host user content, e.g. sites.google.com.
+TOP_DOMAINS = _load_top_domains()
+
 BRANDS = {"amazon", "apple", "microsoft", "google", "paypal", "facebook", "netflix", "bank"}
 
 # ===================================
@@ -95,7 +117,7 @@ def rule_engine(url):
 
     normalized_domain = domain.replace("0", "o").replace("1", "l").replace("3", "e").replace("@", "a")
     for brand in BRANDS:
-        if domain in TRUSTED_DOMAINS:
+        if domain in TRUSTED_DOMAINS or is_top_domain(domain):
             continue
         similarity = SequenceMatcher(None, normalized_domain.split(".")[0], brand).ratio()
         if brand in normalized_domain or similarity >= 0.78:
@@ -125,29 +147,44 @@ def rule_engine(url):
 # =========================
 # TRUST ENGINE
 # =========================
+def is_top_domain(domain):
+    return (domain[4:] if domain.startswith("www.") else domain) in TOP_DOMAINS
+
+
 def trust_engine(url):
     domain = extract_domain(url)
+    if is_top_domain(domain):
+        return TOP_DOMAIN_TRUST
     return 25 if domain in TRUSTED_DOMAINS or any(domain.endswith("." + trusted) for trusted in TRUSTED_DOMAINS) else 0
 
 # =========================
 # ML ENGINE
 # =========================
+def normalize_url_for_model(url):
+    """Strip scheme and leading www. before vectorising.
+
+    The training CSV rarely has a scheme on benign URLs, so the model learned
+    "https://" as a malicious signal and flagged nearly every real-world URL.
+    """
+    url = re.sub(r"^[a-z][a-z0-9+.-]*://", "", url.strip().lower())
+    return re.sub(r"^www\d*\.", "", url).rstrip("/")
+
+
 def ml_engine(url):
-    vec = url_vectorizer.transform([url])
+    vec = url_vectorizer.transform([normalize_url_for_model(url)])
     prob = url_model.predict_proba(vec)[0]
 
     classes = list(url_model.classes_)
 
-    if "phishing" in classes:
-        idx = classes.index("phishing")
+    # Anything that is not "benign" (phishing, malware, defacement) is malicious.
+    if "benign" in classes:
+        return (1 - prob[classes.index("benign")]) * 100
 
-    elif "malicious" in classes:
-        idx = classes.index("malicious")
+    for name in ("phishing", "malicious"):
+        if name in classes:
+            return prob[classes.index(name)] * 100
 
-    else:
-        idx = 1
-
-    return prob[idx] * 100
+    return prob[1] * 100
 
 # =========================
 # FUSION ENGINE
@@ -159,7 +196,12 @@ def fusion_engine(url):
 
     # The ML probability is converted to a capped, visible contribution. This
     # makes the final risk score exactly equal to the displayed factor total.
-    ml_points = min(10, max(0, round(ml_score / 10)))
+    # Bare hostnames carry too little text for the char n-gram model: it scores
+    # almost every unseen domain as malicious. Only trust it fully when the URL
+    # has a path or query to inspect; otherwise keep it a minor signal.
+    has_path = "/" in extract_url(url).split("://", 1)[-1].rstrip("/") or "?" in url
+    ml_cap = ML_MAX_POINTS if has_path else BARE_HOST_ML_MAX_POINTS
+    ml_points = min(ml_cap, max(0, round(ml_score * ML_POINTS_PER_PERCENT)))
     if ml_points:
         add_factor(
             factors,
