@@ -912,7 +912,7 @@ export default function Results() {
 
             <p className="text-amber-900 text-lg">
 
-              No significant threat detected. Continue normal usage.
+              {result.language === "zh" ? "未发现明显威胁，请保持正常使用，并对陌生链接保持警惕。" : "No significant threat detected. Continue normal usage."}
 
             </p>
 
@@ -932,7 +932,7 @@ export default function Results() {
 
                 <span className="text-base">
 
-                  {result.type === "url" ? "Do not open the URL or enter credentials" : "Do not click links or provide personal information"}
+                  {result.language === "zh" ? "请勿点击链接、转账或提供验证码和个人信息" : result.type === "url" ? "Do not open the URL or enter credentials" : "Do not click links or provide personal information"}
 
                 </span>
 
@@ -952,7 +952,7 @@ export default function Results() {
 
                 <span className="text-base">
 
-                  {result.type === "url" ? "Access the claimed organization through its official website" : "Delete the message immediately"}
+                  {result.language === "zh" ? "通过官方 App 或客服电话自行核实，不要使用短信里的联系方式" : result.type === "url" ? "Access the claimed organization through its official website" : "Delete the message immediately"}
 
                 </span>
 
@@ -972,7 +972,7 @@ export default function Results() {
 
                 <span className="text-base">
 
-                  {result.type === "url" ? "Remove the suspicious message containing the link" : "Report to your email provider or mobile carrier"}
+                  {result.language === "zh" ? "向运营商（12321）或国家反诈中心举报该短信" : result.type === "url" ? "Remove the suspicious message containing the link" : "Report to your email provider or mobile carrier"}
 
                 </span>
 
@@ -992,7 +992,7 @@ export default function Results() {
 
                 <span className="text-base">
 
-                  {result.type === "url" ? "Report the phishing website to your browser or a security service" : "Block the sender if possible"}
+                  {result.language === "zh" ? "拉黑发送号码，并提醒家人朋友防范同类诈骗" : result.type === "url" ? "Report the phishing website to your browser or a security service" : "Block the sender if possible"}
 
                 </span>
 
@@ -1012,7 +1012,7 @@ export default function Results() {
 
                 <span className="text-base">
 
-                  Monitor your accounts for suspicious activity
+                  {result.language === "zh" ? "留意银行卡和账户是否有异常交易" : "Monitor your accounts for suspicious activity"}
 
                 </span>
 

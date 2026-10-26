@@ -48,6 +48,8 @@ export interface PredictionResult {
 
   type: "sms" | "url";
 
+  language?: "en" | "zh";
+
   prediction: string;
 
   score: number;
