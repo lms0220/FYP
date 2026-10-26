@@ -1,0 +1,8 @@
+body { width: 300px; margin: 0; padding: 14px; font: 14px system-ui, sans-serif; }
+h1 { margin: 0 0 8px; font-size: 16px; }
+.muted { color: #5f6368; margin: 6px 0; word-break: break-all; }
+.small { font-size: 12px; }
+.verdict { padding: 10px; border-radius: 6px; font-weight: 600; background: #f1f3f4; }
+.verdict.bad { background: #fce8e6; color: #d93025; }
+.verdict.good { background: #e6f4ea; color: #188038; }
+.toggle { display: block; margin-top: 12px; }
