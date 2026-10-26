@@ -1,5 +1,5 @@
 // Shared by the popup and the background worker.
-const API_URL = "http://localhost:5000/predict";
+const API_URL = "http://localhost:5000/api/check-url";
 const CACHE_MS = 10 * 60 * 1000;
 
 async function checkUrl(url) {
@@ -10,7 +10,7 @@ async function checkUrl(url) {
   const response = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: url }),
+    body: JSON.stringify({ url }),
   });
   if (!response.ok) throw new Error("Backend returned " + response.status);
   const result = await response.json();

@@ -613,6 +613,28 @@ def me():
 # =========================
 # RUN
 # =========================
+@app.route("/api/check-url", methods=["POST"])
+def check_url():
+    """Login-free URL check for the browser extension.
+
+    Rules and ML only: it neither calls the LLM nor stores the URL.
+    """
+    url = ((request.get_json(silent=True) or {}).get("url") or "").strip()
+
+    if not url or len(url) > 2048:
+        return jsonify({"message": "A URL of at most 2048 characters is required"}), 400
+
+    result = fusion_engine(url)
+
+    return jsonify({
+        "prediction": result["label"],
+        "score": float(result["final_score"]),
+        "risk_level": result["risk_level"],
+        "flags": result["flags"],
+        "risk_factors": result["risk_factors"],
+    })
+
+
 @app.route("/test")
 def test():
 

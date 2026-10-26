@@ -1,6 +1,6 @@
 # ScamShield browser extension
 
-Chrome/Edge (Manifest V3) extension that checks the current page with the backend's `/predict` endpoint.
+Chrome/Edge (Manifest V3) extension that checks the current page with the backend's login-free `/api/check-url` endpoint (rules and ML only: no LLM, nothing is stored).
 
 ## Install (unpacked)
 
@@ -14,4 +14,4 @@ Tick **Check every page automatically** to show an `OK` / `!` badge on each tab.
 
 - The backend address is fixed to `localhost:5000` (see `api.js` and `host_permissions` in `manifest.json`).
 - Results are cached for 10 minutes. `localhost` pages are never checked.
-- The first check can be slow when the local LLM explanation is generated.
+- No login is needed, and the URL is not saved to your history.

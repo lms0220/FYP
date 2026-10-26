@@ -15,7 +15,10 @@ async function run() {
     const bad = result.prediction === "MALICIOUS";
     verdictEl.textContent = `${bad ? "Likely malicious" : "Looks safe"} · ${result.risk_level} risk · score ${Math.round(result.score)}`;
     verdictEl.className = "verdict " + (bad ? "bad" : "good");
-    detailEl.textContent = result.llm_analysis?.explanation || "";
+    detailEl.textContent = (result.risk_factors || [])
+      .filter((factor) => factor.points > 0)
+      .map((factor) => factor.title)
+      .join(" · ");
   } catch {
     verdictEl.textContent = "Cannot reach the backend. Is it running on localhost:5000?";
   }
