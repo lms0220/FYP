@@ -12,6 +12,7 @@ import uuid
 from werkzeug.security import check_password_hash, generate_password_hash
 from services.llm_service import analyze_url, generate_scam_explanation
 from services.rag_service import retrieve_context
+from services.zh_detection import analyze_chinese_sms, extract_link, is_chinese
 import time
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy import inspect, text as sql_text
@@ -449,7 +450,10 @@ def predict():
 
 
 
-    input_type = detect_input_type(text)
+    # Chinese text goes through the Chinese rule-based analyser; the English
+    # SMS model and knowledge base cannot read it.
+    chinese = is_chinese(text)
+    input_type = "sms" if chinese else detect_input_type(text)
 
 
 
@@ -487,6 +491,22 @@ def predict():
     # ======================
     # SMS ANALYSIS
     # ======================
+
+    elif chinese:
+
+        link = extract_link(text)
+        zh = analyze_chinese_sms(text, fusion_engine(link) if link else None)
+
+        prediction = zh["prediction"]
+        score = zh["score"]
+        flags = zh["flags"]
+        risk_factors = zh["risk_factors"]
+        risk_level = zh["risk_level"]
+        llm_analysis = zh["llm_analysis"]
+        score_breakdown = {"rule_score": score, "final_risk_score": score}
+        rag_analysis = None
+
+        response_type = "sms"
 
     else:
 
@@ -648,6 +668,8 @@ def predict():
     return jsonify({
 
     "type": response_type,
+
+    "language": "zh" if chinese else "en",
 
     "prediction": prediction,
 
