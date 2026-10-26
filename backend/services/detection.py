@@ -30,11 +30,6 @@ SUSPICIOUS_TLDS = {".xyz", ".top", ".click", ".tk", ".ml", ".ga", ".cf", ".ru", 
 SHORTENERS = {"bit.ly", "tinyurl.com", "t.co"}
 SUSPICIOUS_KEYWORDS = {"login", "verify", "secure", "update", "account", "password", "signin", "wallet", "confirm"}
 URGENCY_KEYWORDS = {"urgent", "suspended", "immediately", "alert", "limited", "expire", "locked", "action required"}
-# The URL model reaches ~0.9 F1 on its own; a small cap let it be outvoted by the
-# rule engine and missed phishing URLs that carry no hand-written indicators.
-ML_MAX_POINTS = 50
-ML_POINTS_PER_PERCENT = 0.5
-
 BRANDS = {"amazon", "apple", "microsoft", "google", "paypal", "facebook", "netflix", "bank"}
 
 # ===================================
@@ -143,15 +138,16 @@ def ml_engine(url):
 
     classes = list(url_model.classes_)
 
-    # Anything that is not "benign" (phishing, malware, defacement) is malicious.
-    if "benign" in classes:
-        return (1 - prob[classes.index("benign")]) * 100
+    if "phishing" in classes:
+        idx = classes.index("phishing")
 
-    for name in ("phishing", "malicious"):
-        if name in classes:
-            return prob[classes.index(name)] * 100
+    elif "malicious" in classes:
+        idx = classes.index("malicious")
 
-    return prob[1] * 100
+    else:
+        idx = 1
+
+    return prob[idx] * 100
 
 # =========================
 # FUSION ENGINE
@@ -163,7 +159,7 @@ def fusion_engine(url):
 
     # The ML probability is converted to a capped, visible contribution. This
     # makes the final risk score exactly equal to the displayed factor total.
-    ml_points = min(ML_MAX_POINTS, max(0, round(ml_score * ML_POINTS_PER_PERCENT)))
+    ml_points = min(10, max(0, round(ml_score / 10)))
     if ml_points:
         add_factor(
             factors,
