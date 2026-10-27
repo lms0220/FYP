@@ -36,7 +36,7 @@ services:
       OLLAMA_URL: http://host.docker.internal:11434/api/generate
       OLLAMA_MODEL: qwen3:8b
       OLLAMA_CONNECT_TIMEOUT: "5"
-      OLLAMA_READ_TIMEOUT: "60"
+      OLLAMA_READ_TIMEOUT: "120"
 
     extra_hosts:
       - "host.docker.internal:host-gateway"

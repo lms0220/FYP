@@ -7,8 +7,10 @@ from db_models import db, User, AnalysisResult, Submission
 from datetime import datetime
 import uuid
 from werkzeug.security import check_password_hash, generate_password_hash
-from services.llm_service import analyze_url, generate_scam_explanation
+
 from services.rag_service import retrieve_context
+from services.fusion import fuse_scores, MALICIOUS_THRESHOLD
+from services.llm_detector import llm_assess, llm_scam_probability
 from services.zh_detection import analyze_chinese_sms, extract_link, is_chinese
 import time
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -213,6 +215,7 @@ def home():
 
 
 from services.detection import (
+    extract_url,
     sms_model,
     sms_vectorizer,
     detect_input_type,
@@ -223,6 +226,27 @@ from services.detection import (
 # =========================
 # API ROUTE
 # =========================
+def llm_second_opinion(text, kind, signals):
+    """RAG retrieval + LLM verdict. Returns (assessment or None, context)."""
+    try:
+        context = retrieve_context(text, k=3)
+    except Exception as error:
+        app.logger.warning("RAG retrieval unavailable: %s", error)
+        context = []
+    return llm_assess(text, kind=kind, context=context, signals=signals), context
+
+
+def assessment_to_analysis(assessment, fallback_level):
+    """Shape an LLM assessment for the existing llm_analysis UI contract."""
+    return {
+        "threat_type": assessment["scam_type"],
+        "risk_level": fallback_level,
+        "explanation": assessment["explanation"],
+        "recommendation": " ".join(assessment["recommendation"]),
+        "evidence": assessment["evidence"],
+    }
+
+
 @app.route("/predict", methods=["POST"])
 def predict():
 
@@ -236,6 +260,7 @@ def predict():
 
     llm_analysis = None
     rag_analysis = None
+    detection = {"llm_used": False, "needs_review": False}
 
 
     if not text:
@@ -257,6 +282,13 @@ def predict():
     # URL ANALYSIS
     # ======================
 
+    # A message that merely contains a link (e.g. "Win a free iPhone at http://...")
+    # is an SMS with a link, not a bare URL; judging only the link would ignore
+    # what the message asks the reader to do.
+    link_in_text = extract_url(text) if input_type == "url" else None
+    if link_in_text and len(text.replace(link_in_text, "").split()) >= 4:
+        input_type = "sms"
+
     if input_type == "url":
 
 
@@ -273,9 +305,25 @@ def predict():
         risk_level = result["risk_level"]
         score_breakdown = result["score_breakdown"]
 
-        if prediction == "MALICIOUS":
-            llm_analysis = analyze_url(text, risk_factors)
-            if not isinstance(llm_analysis, dict) or llm_analysis.get("error"):
+        # The URL verdict stays with the rule/ML engine, which is validated on
+        # data. The LLM cannot check domain reputation, so it only explains the
+        # result and flags disagreement for review.
+        if prediction == "MALICIOUS" or score >= 30:
+            assessment, context = llm_second_opinion(
+                text, "URL",
+                {"risk_factors": [factor["title"] for factor in risk_factors if factor["points"] > 0]},
+            )
+            if assessment:
+                llm_analysis = assessment_to_analysis(assessment, risk_level)
+                llm_probability = llm_scam_probability(assessment)
+                detection = {
+                    "llm_used": True,
+                    "needs_review": (prediction == "MALICIOUS") != (llm_probability >= MALICIOUS_THRESHOLD)
+                    and abs(score - llm_probability) >= 30,
+                }
+                score_breakdown = {**score_breakdown, "llm_verdict": assessment["verdict"], "llm_confidence": assessment["confidence"]}
+                rag_analysis = {"references": assessment["references"]}
+            elif prediction == "MALICIOUS":
                 llm_analysis = fallback_url_analysis(result)
 
 
@@ -293,14 +341,27 @@ def predict():
         link = extract_link(text)
         zh = analyze_chinese_sms(text, fusion_engine(link) if link else None)
 
-        prediction = zh["prediction"]
-        score = zh["score"]
+        assessment, context = llm_second_opinion(text, "SMS message (Chinese)", {"rule_score": zh["score"], "rule_flags": zh["flags"]})
+        fused = fuse_scores(zh["score"], assessment)
+
+        prediction = fused["label"]
+        score = fused["score"]
+        risk_level = fused["risk_level"]
         flags = zh["flags"]
         risk_factors = zh["risk_factors"]
-        risk_level = zh["risk_level"]
-        llm_analysis = zh["llm_analysis"]
-        score_breakdown = {"rule_score": score, "final_risk_score": score}
-        rag_analysis = None
+        score_breakdown = fused["breakdown"]
+        detection = {"llm_used": assessment is not None, "needs_review": fused["needs_review"]}
+
+        if assessment:
+            llm_analysis = assessment_to_analysis(assessment, risk_level)
+            rag_analysis = {
+                "scam_type": assessment["scam_type"], "risk_level": risk_level,
+                "explanation": assessment["explanation"], "recommendation": assessment["recommendation"],
+                "references": assessment["references"],
+            }
+        else:
+            llm_analysis = {**zh["llm_analysis"], "risk_level": risk_level}
+            rag_analysis = None
 
         response_type = "sms"
 
@@ -309,65 +370,51 @@ def predict():
 
         vector = sms_vectorizer.transform([text])
 
+        # Probability of the scam class (the old code reported the winning
+        # class's confidence, so a confident SAFE showed a score of ~98).
+        spam_index = list(sms_model.classes_).index(1)
+        ml_probability = float(sms_model.predict_proba(vector)[0][spam_index]) * 100
 
-        prediction_value = sms_model.predict(vector)[0]
+        # Take the worse of the text model and the embedded link's risk score.
+        link = extract_link(text)
+        if link:
+            link_result = fusion_engine(link)
+            ml_probability = max(ml_probability, float(link_result["final_score"]))
 
+        assessment, context = llm_second_opinion(text, "SMS message", {"ml_scam_probability": round(ml_probability)})
+        fused = fuse_scores(ml_probability, assessment)
 
-        probability = sms_model.predict_proba(vector)[0]
+        prediction = fused["label"]
+        score = fused["score"]
+        risk_level = fused["risk_level"]
+        score_breakdown = {**fused["breakdown"], "ml_probability": round(ml_probability, 2)}
+        detection = {"llm_used": assessment is not None, "needs_review": fused["needs_review"]}
 
-
-        score = round(
-            max(probability) * 100,
-            2
-        )
-
-
-
-        prediction = "MALICIOUS" if prediction_value == 1 else "SAFE"
-
-        try:
-            retrieved_context = retrieve_context(text, k=3)
-            rag_analysis = generate_scam_explanation(text, retrieved_context)
-            if rag_analysis.get("error"):
-                raise RuntimeError(rag_analysis["error"])
-
-            # Preserve the existing UI contract while the API exposes the
-            # richer RAG payload separately.
-            llm_analysis = {
-                "threat_type": rag_analysis.get("scam_type", "Other"),
-                "risk_level": rag_analysis.get(
-                    "risk_level", "High" if prediction == "MALICIOUS" else "Low"
-                ),
-                "explanation": rag_analysis.get("explanation", ""),
-                "recommendation": " ".join(rag_analysis.get("recommendation", [])),
+        if assessment:
+            llm_analysis = assessment_to_analysis(assessment, risk_level)
+            rag_analysis = {
+                "scam_type": assessment["scam_type"], "risk_level": risk_level,
+                "explanation": assessment["explanation"], "recommendation": assessment["recommendation"],
+                "references": assessment["references"],
             }
-        except Exception as error:
-            app.logger.warning("RAG explanation unavailable: %s", error)
+        else:
+            app.logger.warning("LLM assessment unavailable; using the ML model alone")
             rag_analysis = {
                 "scam_type": "Other" if prediction == "MALICIOUS" else "None",
-                "risk_level": "High" if prediction == "MALICIOUS" else "Low",
-                "explanation": "Knowledge-base explanation is unavailable. Run python create_vector_db.py to build the local index.",
+                "risk_level": risk_level,
+                "explanation": "AI explanation is unavailable (is Ollama running?). The verdict comes from the ML model alone.",
                 "recommendation": ["Do not share personal information or OTPs."],
                 "references": [],
             }
-
-
+            llm_analysis = {
+                "threat_type": rag_analysis["scam_type"], "risk_level": risk_level,
+                "explanation": rag_analysis["explanation"], "recommendation": " ".join(rag_analysis["recommendation"]),
+            }
 
         flags = []
         risk_factors = []
-        risk_level = "High" if prediction == "MALICIOUS" and score >= 70 else "Medium" if prediction == "MALICIOUS" else "Low"
-        score_breakdown = {
-            "ml_probability": float(score),
-            "rule_score": 0,
-            "trusted_domain_adjustment": 0,
-        }
-
 
         response_type = "sms"
-
-
-
-
 
     # ======================
     # SAVE DATABASE
@@ -466,6 +513,8 @@ def predict():
     "type": response_type,
 
     "language": "zh" if chinese else "en",
+
+    "detection": detection,
 
     "prediction": prediction,
 
