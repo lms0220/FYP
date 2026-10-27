@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <h1>ScamShield</h1>
+  <p id="url" class="muted"></p>
+  <div id="verdict" class="verdict">Checking…</div>
+  <p id="detail" class="muted"></p>
+  <label class="toggle"><input type="checkbox" id="auto" /> Check every page automatically</label>
+  <p class="muted small">Automatic checks send each visited URL to your local backend.</p>
+  <script src="api.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "ScamShield URL Checker",
+  "version": "0.1.0",
+  "description": "Check the current page against the ScamShield phishing detection backend.",
+  "permissions": ["activeTab", "storage", "tabs"],
+  "host_permissions": ["http://localhost:5000/*", "http://127.0.0.1:5000/*"],
+  "action": { "default_popup": "popup.html", "default_title": "ScamShield" },
+  "background": { "service_worker": "background.js" }
+}
