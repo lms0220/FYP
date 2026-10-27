@@ -66,11 +66,22 @@ export interface PredictionResult {
   }>;
 
   score_breakdown?: {
-    ml_probability: number;
+    ml_probability?: number;
     ml_contribution?: number;
-    rule_score: number;
-    trusted_domain_adjustment: number;
+    rule_score?: number;
+    trusted_domain_adjustment?: number;
     final_risk_score?: number;
+    // Present when the LLM + RAG detector took part in the verdict.
+    base_score?: number;
+    llm_probability?: number | null;
+    llm_verdict?: "SCAM" | "SUSPICIOUS" | "LEGIT" | null;
+    llm_confidence?: number | null;
+    llm_weight?: number;
+  };
+
+  detection?: {
+    llm_used: boolean;
+    needs_review: boolean;
   };
 
 
@@ -85,6 +96,8 @@ export interface PredictionResult {
     risk_level?: string;
 
     recommendation?: string;
+
+    evidence?: string[];
 
   };
 
