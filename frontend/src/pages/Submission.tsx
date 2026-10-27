@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Shield,
   MessageSquare,
@@ -92,6 +92,27 @@ useState("");
 const [loading,setLoading]
 =
 useState(false);
+
+// The local LLM needs 10-60 s; show elapsed time so the wait is not mistaken for a hang.
+const [elapsed,setElapsed]
+=
+useState(0);
+
+useEffect(()=>{
+
+if(!loading){
+setElapsed(0);
+return;
+}
+
+const timer=setInterval(
+()=>setElapsed((seconds)=>seconds+1),
+1000
+);
+
+return()=>clearInterval(timer);
+
+},[loading]);
 
 
 const [loadedExample,setLoadedExample]
@@ -510,7 +531,7 @@ className="w-full bg-indigo-600 text-white p-4 rounded-lg font-semibold"
 
 loading
 ?
-"Analysing..."
+`Analysing... ${elapsed}s`
 :
 "Analyze with AI"
 

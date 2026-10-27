@@ -459,6 +459,52 @@ export default function Results() {
                 </div>
               )}
 
+              {result.detection?.needs_review && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900">
+                  <p className="font-semibold mb-1">Needs review</p>
+                  <p>
+                    The ML/rule detector and the AI analysis disagree on this
+                    message. Treat it with caution and verify it through an
+                    official channel before acting.
+                  </p>
+                </div>
+              )}
+
+              {result.llm_analysis.evidence && result.llm_analysis.evidence.length > 0 && (
+                <div>
+                  <p className="font-semibold mb-1">Evidence found by the AI</p>
+                  <ul className="list-disc pl-6 space-y-1">
+                    {result.llm_analysis.evidence.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {result.score_breakdown?.llm_verdict && (
+                <div className="rounded-lg border border-gray-200 p-4">
+                  <p className="font-semibold mb-2">How this verdict was reached</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-500">ML / rule detector</p>
+                      <p className="text-lg font-bold">{Math.round(result.score_breakdown.base_score ?? result.score)} / 100</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">AI + knowledge base</p>
+                      <p className="text-lg font-bold">
+                        {result.score_breakdown.llm_verdict}
+                        {result.score_breakdown.llm_confidence != null &&
+                          ` (${Math.round(result.score_breakdown.llm_confidence * 100)}% sure)`}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Combined risk score</p>
+                      <p className="text-lg font-bold">{Math.round(result.score)} / 100</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
 
 
               <div>
